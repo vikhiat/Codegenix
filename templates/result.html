@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detection Result</title>
+</head>
+
+<body>
+
+<h2>Processed Video</h2>
+
+{% if video %}
+<video width="700" controls>
+    <source src="/processed/{{video}}" type="video/mp4">
+</video>
+{% else %}
+<p>No video found</p>
+{% endif %}
+
+<br>
+<a href="/analytics">Upload Another</a>
+
+</body>
+</html>
