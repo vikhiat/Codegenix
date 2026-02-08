@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* INHERITED STYLES FROM MAIN PAGE FOR CONSISTENCY */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: radial-gradient(circle at top right, #f8f9fa, #ffffff);
@@ -21,29 +15,12 @@
             line-height: 1.6;
             overflow-x: hidden;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
         /* HEADER STYLES */
-        .tech-header {
-            padding: 60px 20px;
-            text-align: center;
-        }
-
-        .tech-header h1 {
-            font-size: 3.5rem;
-            color: #1e272e;
-            margin-bottom: 15px;
-        }
-
-        .breadcrumb {
-            color: #636e72;
-            font-size: 1.1rem;
-        }
+        .tech-header { padding: 60px 20px; text-align: center; }
+        .tech-header h1 { font-size: 3.5rem; color: #1e272e; margin-bottom: 15px; }
+        .breadcrumb { color: #636e72; font-size: 1.1rem; }
 
         /* CARD STYLES */
         .glass-card {
@@ -54,27 +31,14 @@
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
             border: 1px solid #f1f2f6;
         }
-
-        h2 {
-            color: #00b894;
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f1f2f6;
-            padding-bottom: 10px;
-            display: inline-block;
-        }
-
-        h3 {
-            margin-top: 20px;
-            margin-bottom: 10px;
-            color: #2d3436;
-        }
+        
+        h2 { color: #00b894; font-size: 1.8rem; margin-bottom: 20px; border-bottom: 2px solid #f1f2f6; padding-bottom: 10px; display: inline-block; }
+        h3 { margin-top: 20px; margin-bottom: 10px; color: #2d3436; }
 
         /* CODE BLOCK STYLING */
         .code-block {
             background: #2d3436;
-            color: #fab1a0;
-            /* Pastel Orange for code text */
+            color: #fab1a0; /* Pastel Orange for code text */
             padding: 20px;
             border-radius: 12px;
             font-family: 'Courier New', monospace;
@@ -85,67 +49,33 @@
         }
 
         /* GRID FOR SPECS */
-        .specs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
+        .specs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
 
         /* BACK BUTTON */
         .back-btn {
-            display: inline-block;
-            background: #2d3436;
-            color: white;
-            padding: 12px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-top: 40px;
+            display: inline-block; background: #2d3436; color: white; padding: 12px 30px;
+            border-radius: 50px; text-decoration: none; font-weight: 600; margin-top: 40px;
             transition: transform 0.2s;
         }
-
-        .back-btn:hover {
-            transform: translateX(-5px);
-            background: #000;
-        }
-
+        .back-btn:hover { transform: translateX(-5px); background: #000; }
+        
         /* DEMO BUTTON STYLING */
         .demo-btn {
-            display: inline-block;
-            background: #00b894;
-            color: white;
-            padding: 16px 50px;
-            border-radius: 50px;
-            font-weight: 800;
-            font-size: 1.2rem;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
-            border: none;
-            cursor: pointer;
+            display: inline-block; background: #00b894; color: white; padding: 16px 50px;
+            border-radius: 50px; font-weight: 800; font-size: 1.2rem; text-decoration: none;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+            border: none; cursor: pointer;
         }
+        .demo-btn:hover { background: #00a383; transform: scale(1.05); box-shadow: 0 10px 25px rgba(0, 184, 148, 0.4); }
 
-        .demo-btn:hover {
-            background: #00a383;
-            transform: scale(1.05);
-            box-shadow: 0 10px 25px rgba(0, 184, 148, 0.4);
-        }
-
-        ul {
-            margin-left: 20px;
-            margin-bottom: 20px;
-        }
-
-        li {
-            margin-bottom: 8px;
-        }
+        ul { margin-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
     </style>
 </head>
-
 <body>
 
     <div class="container">
-        <a href="/" class="back-btn">← Back to Dashboard</a>
+        <a href="index.html" class="back-btn">← Back to Dashboard</a>
 
         <header class="tech-header">
             <h1>Technical Deep Dive</h1>
@@ -156,8 +86,7 @@
             <h2>1. The Vision System (YOLOv8)</h2>
             <div class="specs-grid">
                 <div>
-                    <p>We utilize the <strong>Ultralytics YOLOv8 Nano</strong> model for real-time object detection. The
-                        model is optimized for edge deployment, ensuring low latency processing of video feeds.</p>
+                    <p>We utilize the <strong>Ultralytics YOLOv8 Nano</strong> model for real-time object detection. The model is optimized for edge deployment, ensuring low latency processing of video feeds.</p>
                     <br>
                     <h3>Detection Classes:</h3>
                     <ul>
@@ -170,61 +99,57 @@
                 <div>
                     <h3>Model Configuration</h3>
                     <div class="code-block">
-                        model = YOLO('yolov8n.pt')
+model = YOLO('yolov8n.pt')
 
-                        # Confidence threshold set to 0.5 to reduce
-                        # false positives in rain/fog
-                        results = model(frame, conf=0.5)
+# Confidence threshold set to 0.5 to reduce 
+# false positives in rain/fog
+results = model(frame, conf=0.5)
 
-                        # Extract bounding boxes
-                        boxes = results[0].boxes
+# Extract bounding boxes
+boxes = results[0].boxes
                     </div>
                 </div>
             </div>
-
+            
         </section>
 
         <section class="glass-card">
             <h2>2. Density Calculation Logic</h2>
-            <p>Unlike traditional timer-based systems, NeuroFlow calculates the "Green Signal Time" dynamically based on
-                the total vehicle density in the frame.</p>
-
+            <p>Unlike traditional timer-based systems, NeuroFlow calculates the "Green Signal Time" dynamically based on the total vehicle density in the frame.</p>
+            
             <h3>The Formula:</h3>
-            <p>The system calculates a <strong>Density Score (DS)</strong> by summing the count of vehicles multiplied
-                by their specific weight factor.</p>
-
+            <p>The system calculates a <strong>Density Score (DS)</strong> by summing the count of vehicles multiplied by their specific weight factor.</p>
+            
             <div class="code-block">
-                def calculate_green_time(vehicle_counts):
-                # Weights based on vehicle size & clearance time
-                weights = {'car': 1, 'bus': 2.5, 'truck': 2.0, 'bike': 0.5}
-
-                total_density = (vehicle_counts['car'] * weights['car']) + \
-                (vehicle_counts['bus'] * weights['bus']) + ...
-
-                # Dynamic Time Allocation
-                if total_density > 20:
-                return 60 # High Traffic (60s Green)
-                elif total_density > 10:
-                return 30 # Medium Traffic (30s Green)
-                else:
-                return 10 # Low Traffic (10s Green)
+def calculate_green_time(vehicle_counts):
+    # Weights based on vehicle size & clearance time
+    weights = {'car': 1, 'bus': 2.5, 'truck': 2.0, 'bike': 0.5}
+    
+    total_density = (vehicle_counts['car'] * weights['car']) + \
+                    (vehicle_counts['bus'] * weights['bus']) + ...
+    
+    # Dynamic Time Allocation
+    if total_density > 20:
+        return 60  # High Traffic (60s Green)
+    elif total_density > 10:
+        return 30  # Medium Traffic (30s Green)
+    else:
+        return 10  # Low Traffic (10s Green)
             </div>
-
+            
         </section>
 
         <section class="glass-card" style="text-align: center; border: 2px solid #00b894;">
             <h2 style="border-bottom: none; font-size: 2.5rem; margin-bottom: 10px;">🚀 Ready for Action?</h2>
-            <p style="color: #636e72; margin-bottom: 30px; font-size: 1.2rem;">Experience the real-time detection and
-                adaptive signaling simulation.</p>
-
-            <a href="demo.html" class="demo-btn">Launch Live Demo</a>
+            <p style="color: #636e72; margin-bottom: 30px; font-size: 1.2rem;">Experience the real-time detection and adaptive signaling simulation.</p>
+            
+            <a href="http://127.0.0.1:5000/" class="demo-btn">Launch Live Demo</a>
         </section>
 
         <footer style="text-align: center; color: #95a5a6; padding-bottom: 40px;">
-            <p>NeuroFlow Technical Documentation | 2026</p>
+            <p>NeuroFlow Technical Documentation </p>
         </footer>
 
     </div>
 </body>
-
 </html>
