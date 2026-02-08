@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroFlow - Traffic Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #1e272e;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        h1 {
+            color: #00b894;
+            font-size: 2.5rem;
+        }
+
+        .back-btn {
+            background: #2d3436;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #00b894;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .time-btn {
+            background: transparent;
+            border: 2px solid #00b894;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .time-btn.active,
+        .time-btn:hover {
+            background: #00b894;
+            color: #1e272e;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: #2d3436;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #dfe6e9;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: #2d3436;
+            padding: 20px;
+            border-radius: 15px;
+            flex: 1;
+            text-align: center;
+            border-top: 4px solid #00b894;
+        }
+
+        .stat-val {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #b2bec3;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>📊 Traffic Analytics</h1>
+                <p style="color: #b2bec3;">Smart Infrastructure Data Insights</p>
+            </div>
+            <a href="/" class="back-btn">← Back to Dashboard</a>
+        </header>
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-label">Total Volume</div>
+                <div class="stat-val" id="totalVolume">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Peak Traffic</div>
+                <div class="stat-val" id="peakTraffic">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Avg Daily</div>
+                <div class="stat-val" id="avgDaily">0</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="time-btn active" onclick="updateCharts(10)">Last 10 Days</button>
+            <button class="time-btn" onclick="updateCharts(20)">Last 20 Days</button>
+            <button class="time-btn" onclick="updateCharts(30)">Last 30 Days</button>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🚗 Daily Traffic Volume</h2>
+                <canvas id="volumeChart"></canvas>
+            </div>
+            <div class="card">
+                <h2>📈 Peak vs Average</h2>
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let volumeChartInstance = null;
+        let comparisonChartInstance = null;
+
+        async function fetchAnalytics(days) {
+            try {
+                const response = await fetch(`/api/traffic_data?days=${days}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                return [];
+            }
+        }
+
+        async function updateCharts(days) {
+            // Update buttons
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.innerText.includes(days)) btn.classList.add('active');
+            });
+
+            const data = await fetchAnalytics(days);
+
+            if (data.length === 0) {
+                // Mock data if database is empty for demonstration
+                // Generate simulated data for last N days
+                const today = new Date();
+                for (let i = days; i >= 0; i--) {
+                    const d = new Date(today);
+                    d.setDate(d.getDate() - i);
+                    data.push({
+                        date: d.toISOString().split('T')[0],
+                        total_volume: Math.floor(Math.random() * 500) + 100,
+                        avg_vehicles: Math.floor(Math.random() * 20) + 5,
+                        max_vehicles: Math.floor(Math.random() * 50) + 20
+                    });
+                }
+            }
+
+            // Update Stats
+            const totalVol = data.reduce((acc, curr) => acc + (curr.total_volume || 0), 0);
+            const peak = Math.max(...data.map(d => d.max_vehicles || 0));
+            const avg = Math.round(totalVol / data.length);
+
+            document.getElementById('totalVolume').innerText = totalVol.toLocaleString();
+            document.getElementById('peakTraffic').innerText = peak.toLocaleString();
+            document.getElementById('avgDaily').innerText = avg.toLocaleString();
+
+            const labels = data.map(d => d.date);
+            const volumes = data.map(d => d.total_volume);
+            const avgs = data.map(d => d.avg_vehicles);
+            const maxs = data.map(d => d.max_vehicles);
+
+            // Destroy existing charts
+            if (volumeChartInstance) volumeChartInstance.destroy();
+            if (comparisonChartInstance) comparisonChartInstance.destroy();
+
+            // Create Volume Chart
+            const ctx1 = document.getElementById('volumeChart').getContext('2d');
+            volumeChartInstance = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Vehicles',
+                        data: volumes,
+                        borderColor: '#00b894',
+                        backgroundColor: 'rgba(0, 184, 148, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    },
+                    scales: {
+                        y: { ticks: { color: '#b2bec3' }, grid: { color: '#444' } },
+                        x: { ticks: { color: '#b2bec3' }, grid: { color: '#444' } }
+                    }
+                }
+            });
+
+            // Create Comparison Chart
+            const ctx2 = document.getElementById('comparisonChart').getContext('2d');
+            comparisonChartInstance = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Average Density',
+                            data: avgs,
+                            backgroundColor: '#0984e3'
+                        },
+                        {
+                            label: 'Peak Density',
+                            data: maxs,
+                            backgroundColor: '#d63031'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    },
+                    scales: {
+                        y: { ticks: { color: '#b2bec3' }, grid: { color: '#444' } },
+                        x: { ticks: { color: '#b2bec3' }, grid: { color: '#444' } }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        updateCharts(10);
+    </script>
+</body>
+
+</html>
+

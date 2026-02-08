@@ -1,0 +1,88 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Infrastructure</title>
+  <style>
+    body {font-family: Arial, sans-serif; display:flex; height:100vh; align-items:center; justify-content:center; background:#f5f5f5;}
+    .card {background:white; padding:40px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.15); text-align:center;}
+    button {padding:12px 20px; font-size:16px; cursor:pointer; border:none; border-radius:8px; background:#0077ff; color:white;}
+    button:hover {background:#005fcc;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Smart Infrastructure for Modern Cities</h1>
+    <p>Click below to view traffic database</p>
+    <button onclick="openDB()">Open Database</button>
+  </div>
+
+  <script>
+    function openDB() {
+      window.location.href = "database.html";
+    }
+  </script>
+</body>
+</html>
+
+
+<!-- database.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traffic Database</title>
+  <style>
+    body {font-family: Arial, sans-serif; padding:30px; background:#fafafa;}
+    table {border-collapse: collapse; width:100%; background:white;}
+    th, td {border:1px solid #ddd; padding:10px; text-align:center;}
+    th {background:#0077ff; color:white;}
+    input, button {margin:5px; padding:8px;}
+  </style>
+</head>
+<body>
+  <h2>Street Traffic Records</h2>
+
+  <input type="text" id="road" placeholder="Road Name" />
+  <input type="number" id="cars" placeholder="Cars Count" />
+  <button onclick="addRecord()">Add Record</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Road</th>
+        <th>Cars Crossed</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <script>
+    let data = JSON.parse(localStorage.getItem("trafficData")) || [];
+
+    function render() {
+      const body = document.getElementById("tableBody");
+      body.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.road}</td><td>${row.cars}</td>`;
+        body.appendChild(tr);
+      });
+      localStorage.setItem("trafficData", JSON.stringify(data));
+    }
+
+    function addRecord() {
+      const road = document.getElementById("road").value;
+      const cars = document.getElementById("cars").value;
+      if (!road || !cars) return;
+      data.push({road, cars});
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
