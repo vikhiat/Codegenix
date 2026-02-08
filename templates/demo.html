@@ -1,120 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>NeuroFlow - Upload & Detect</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f0f2f5;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-        }
-
+        body { font-family: 'Inter', sans-serif; background: #f0f2f5; text-align: center; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+        
         /* UPLOAD SCREEN STYLES */
         .upload-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;
         }
-
         .upload-box {
-            background: white;
-            padding: 50px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 2px dashed #00b894;
-            width: 400px;
+            background: white; padding: 50px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 2px dashed #00b894; width: 400px;
         }
-
-        h1 {
-            color: #2d3436;
-            margin-bottom: 30px;
-        }
-
-        input[type="file"] {
-            margin-bottom: 20px;
-        }
-
+        h1 { color: #2d3436; margin-bottom: 30px; }
+        input[type="file"] { margin-bottom: 20px; }
         .btn {
-            background: #00b894;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1rem;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
+            background: #00b894; color: white; border: none; padding: 12px 30px; font-size: 1rem;
+            border-radius: 50px; cursor: pointer; font-weight: 600; transition: 0.3s;
         }
-
-        .btn:hover {
-            background: #00a383;
-            transform: scale(1.05);
-        }
+        .btn:hover { background: #00a383; transform: scale(1.05); }
 
         /* DASHBOARD STYLES (Only visible after upload) */
-        .dashboard-container {
-            display: flex;
-            height: 100%;
-            background: #1e272e;
-            color: white;
-        }
-
-        .video-section {
-            flex: 3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-        }
-
-        .video-feed {
-            max-width: 95%;
-            max-height: 90%;
-            border: 2px solid #555;
-            border-radius: 10px;
-        }
-
-        .sidebar {
-            flex: 1;
-            padding: 30px;
-            border-left: 1px solid #444;
-            text-align: left;
-        }
-
-        .stat-card {
-            background: #2d3436;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 4px solid #00b894;
-        }
-
-        .error-msg {
-            color: #d63031;
-            background: #ffeaa7;
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-        }
-
-        .accept-hint {
-            color: #636e72;
-            font-size: 0.85rem;
-            margin-top: 8px;
-        }
+        .dashboard-container { display: flex; height: 100%; background: #1e272e; color: white; }
+        .video-section { flex: 3; display: flex; align-items: center; justify-content: center; background: #000; }
+        .video-feed { max-width: 95%; max-height: 90%; border: 2px solid #555; border-radius: 10px; }
+        .sidebar { flex: 1; padding: 30px; border-left: 1px solid #444; text-align: left; }
+        .stat-card { background: #2d3436; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #00b894; }
     </style>
 </head>
-
 <body>
 
     {% if not video_uploaded %}
@@ -122,37 +38,32 @@
         <div class="upload-box">
             <h1>🚦 NeuroFlow Input</h1>
             <p style="color: #636e72; margin-bottom: 20px;">Upload a traffic video to begin analysis</p>
-
-            {% if error == 'no_file' %}
-            <p class="error-msg">Please choose a file first, then click Upload & Start AI.</p>
-            {% elif error == 'file_too_large' %}
-            <p class="error-msg">File is too large. Maximum size is 500 MB.</p>
-            {% elif error == 'save_failed' %}
-            <p class="error-msg">Upload failed. Check disk space and try again.</p>
-            {% endif %}
-
-            <form action="/demo" method="post" enctype="multipart/form-data" id="upload-form">
-                <input type="file" name="video" accept="video/mp4,video/avi,video/quicktime,.mp4,.avi,.mov" required id="video-input">
-                <p class="accept-hint">Accepted: MP4, AVI, MOV</p>
+            
+            <form id="upload-form" action="/" method="post" enctype="multipart/form-data">
+                <input type="file" id="video-file" name="video" accept=".mp4, .avi, .mov" required>
                 <br>
-                <button type="submit" class="btn" id="submit-btn">🚀 Upload & Start AI</button>
+                <button type="submit" class="btn">🚀 Upload & Start AI</button>
             </form>
             <script>
-                document.getElementById('upload-form').addEventListener('submit', function() {
-                    var btn = document.getElementById('submit-btn');
-                    btn.disabled = true;
-                    btn.textContent = '⏳ Uploading...';
+                document.getElementById('upload-form').addEventListener('submit', function(e) {
+                    console.log('Form submitted');
+                    var fileInput = document.getElementById('video-file');
+                    if (fileInput.files.length === 0) {
+                        alert('Please select a video file');
+                        e.preventDefault();
+                    }
                 });
             </script>
             <br>
-            <a href="/demo" style="color: #999; text-decoration: none; font-size: 0.9rem;">← Reload</a>
+            <a href="http://127.0.0.1:5000/" style="color: #999; text-decoration: none; font-size: 0.9rem;">← Reload</a>
         </div>
     </div>
 
     {% else %}
     <div class="dashboard-container">
         <div class="video-section">
-            <img src="{{ url_for('video_feed') }}" class="video-feed">
+            <!-- Use MJPEG stream directly for continuous frames -->
+            <img id="frame" class="video-feed" src="/video_feed" alt="Processing...">
         </div>
         <div class="sidebar">
             <h2 style="color: #00b894;">Live Analysis</h2>
@@ -165,16 +76,12 @@
                 <h3>YOLOv8 Nano</h3>
             </div>
             <p style="color: #aaa; font-size: 0.9rem; margin-top: 50px;">
-                The system is now dynamically calculating signal times based on the density of vehicles in your uploaded
-                video.
+                The system is now dynamically calculating signal times based on the density of vehicles in your uploaded video.
             </p>
-            <a href="/demo" class="btn"
-                style="display:inline-block; margin-top: 20px; text-decoration: none; text-align: center;">Upload New
-                Video</a>
+            <a href="/" class="btn" style="display:inline-block; margin-top: 20px; text-decoration: none; text-align: center;">Upload New Video</a>
         </div>
     </div>
     {% endif %}
 
 </body>
-
 </html>
