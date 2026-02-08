@@ -1,93 +1,171 @@
-# app.py
-from flask import Flask, render_template, request, redirect, url_for, Response, send_from_directory
 import os
+import math
 import cv2
-import threading
-import time
-
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+from flask import Flask, render_template, Response, request, redirect
+from ultralytics import YOLO
 
 app = Flask(__name__)
+
+# --- CONFIGURATION ---
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+current_video_path = None
 
-# Shared state (simple)
-video_path = {"path": None}
-lock = threading.Lock()
+# --- LOAD AI MODEL ---
+model = YOLO("yolov8n.pt")  # YOLOv8 Nano for speed
 
-@app.route('/')
-def index():
-    return redirect(url_for('demo'))
-
-@app.route('/demo', methods=['GET', 'POST'])
-def demo():
-    if request.method == 'POST':
-        file = request.files.get('video')
-        if not file:
-            return "No file uploaded", 400
-        filename = file.filename
-        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(save_path)
-        with lock:
-            video_path['path'] = save_path
-        # After POST, redirect to GET so template sees video_uploaded True
-        return redirect(url_for('demo'))
-
-    # GET
-    with lock:
-        uploaded = bool(video_path['path'])
-    return render_template('demo.html', video_uploaded=uploaded)
+classNames = [
+    "person","bicycle","car","motorbike","aeroplane","bus","train","truck","boat",
+    "traffic light","fire hydrant","stop sign","parking meter","bench","bird","cat",
+    "dog","horse","sheep","cow","elephant","bear","zebra","giraffe","backpack","umbrella",
+    "handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite",
+    "baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle",
+    "wine glass","cup","fork","knife","spoon","bowl","banana","apple","sandwich","orange",
+    "broccoli","carrot","hot dog","pizza","donut","cake","chair","sofa","pottedplant",
+    "bed","diningtable","toilet","tvmonitor","laptop","mouse","remote","keyboard",
+    "cell phone","microwave","oven","toaster","sink","refrigerator","book","clock",
+    "vase","scissors","teddy bear","hair drier","toothbrush"
+]
 
 def generate_frames():
-    """Generator that yields frames as multipart/x-mixed-replace for <img> streaming."""
-    while True:
-        with lock:
-            path = video_path['path']
-        if not path:
-            time.sleep(0.1)
+    global current_video_path
+
+    if not current_video_path or not os.path.exists(current_video_path):
+        return
+
+    cap = cv2.VideoCapture(current_video_path)
+
+    while cap.isOpened():
+        success, img = cap.read()
+        if not success:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             continue
 
-        cap = cv2.VideoCapture(path)
-        if not cap.isOpened():
-            # cannot open file; yield a placeholder image (one-time) and break to avoid tight loop
-            print("ERROR: cv2 can't open", path)
-            blank = 255 * np.ones((480, 640, 3), dtype=np.uint8)
-            _, jpeg = cv2.imencode('.jpg', blank)
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
-            break
+        results = model(img, stream=True)
 
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break  # video ended; break back to top to re-open or stop
-            # --- PLACEHOLDER for YOLO inference ---
-            # Replace below lines with your YOLO inference and drawing code.
-            h, w = frame.shape[:2]
-            # draw fake detection for visibility
-            cv2.rectangle(frame, (int(w*0.2), int(h*0.3)), (int(w*0.6), int(h*0.7)), (0,255,0), 2)
-            cv2.putText(frame, "vehicle:0.78", (int(w*0.2), int(h*0.3)-10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+        car_count = bus_count = truck_count = bike_count = 0
 
-            # encode as jpeg
-            ret2, jpeg = cv2.imencode('.jpg', frame)
-            if not ret2:
-                continue
+        for r in results:
+            for box in r.boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                conf = round(float(box.conf[0]), 2)
+                cls = int(box.cls[0])
+                currentClass = classNames[cls]
 
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
-            time.sleep(0.03)  # ~30 FPS throttle
+                if currentClass in ["car", "bus", "truck", "motorbike"] and conf > 0.3:
+                    if currentClass == "bus":
+                        color = (0, 165, 255)
+                    elif currentClass == "truck":
+                        color = (255, 0, 255)
+                    elif currentClass == "motorbike":
+                        color = (0, 255, 255)
+                    else:
+                        color = (255, 0, 0)
 
-        cap.release()
-        # loop to reopen file (if you want continuous replay), or break to stop streaming
-        # break
-        time.sleep(0.5)
+                    cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+                    cv2.putText(
+                        img,
+                        f"{currentClass} {conf}",
+                        (x1, max(20, y1)),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 255, 255),
+                        1
+                    )
 
-@app.route('/video_feed')
+                    if currentClass == "car":
+                        car_count += 1
+                    elif currentClass == "bus":
+                        bus_count += 1
+                    elif currentClass == "truck":
+                        truck_count += 1
+                    elif currentClass == "motorbike":
+                        bike_count += 1
+
+        # --- Density Logic ---
+        density_score = (
+            car_count * 1.0 +
+            bus_count * 2.5 +
+            truck_count * 2.0 +
+            bike_count * 0.5
+        )
+
+        if density_score > 20:
+            sig_color, text = (0, 255, 0), "GREEN LIGHT"
+        elif density_score > 10:
+            sig_color, text = (0, 255, 255), "YELLOW LIGHT"
+        else:
+            sig_color, text = (0, 0, 255), "RED LIGHT"
+
+        # --- OVERLAY UI (MORE UPWARDS) ---
+        cv2.putText(
+            img,
+            f"SIGNAL: {text}",
+            (40, 25),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            sig_color,
+            3
+        )
+
+        cv2.putText(
+            img,
+            f"Density Score: {density_score:.1f}",
+            (40, 55),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (255, 255, 255),
+            2
+        )
+
+        ret, buffer = cv2.imencode(".jpg", img)
+        frame = buffer.tobytes()
+
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+        )
+
+    cap.release()
+
+# --- ROUTES ---
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    global current_video_path
+
+    if request.method == "POST":
+        if "video" not in request.files:
+            return redirect(request.url)
+
+        file = request.files["video"]
+        if file.filename == "":
+            return redirect(request.url)
+
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], "input_video.mp4")
+        file.save(filepath)
+        current_video_path = filepath
+
+        return render_template("demo.html", video_uploaded=True)
+
+    return render_template("demo.html", video_uploaded=False)
+
+@app.route("/video_feed")
 def video_feed():
-    return Response(generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    if not current_video_path:
+        return "No video uploaded", 400
 
-if __name__ == '__main__':
-    # debug on port 5000; make sure you access http://127.0.0.1:5000/demo
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    return Response(
+        generate_frames(),
+        mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
+
+@app.route("/details.html")
+def details():
+    return render_template("details.html")
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
